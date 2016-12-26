@@ -8,9 +8,11 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,19 +32,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
 
     ListView lv;
     private ArrayList<HashMap<String, String>> citiesList;
+    DecimalFormat speedFormat = new DecimalFormat("#.##");
+    DecimalFormat tempFormat = new DecimalFormat("#.#");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //getLoaderManager().initLoader(0, null, );
 
         final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -144,8 +148,9 @@ public class MainActivity extends AppCompatActivity {
     public final void refresh(){
         HttpHandler sh = new HttpHandler();
         citiesList.clear();
-        String url = "http://api.openweathermap.org/data/2.5/box/city?bbox=13.9,48.8,24.5,54.9,40&cluster=yes&appid=59a58c36edc289243e879bcd9da785e4";
+        String url = "http://api.openweathermap.org/data/2.5/box/city?bbox=13.9,48.8,24.5,54.9,80&cluster=yes&appid=59a58c36edc289243e879bcd9da785e4";
         String jsonStr = sh.makeServiceCall(url);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         if (jsonStr != null) {
             try {
                 JSONObject jsonObj = new JSONObject(jsonStr);
@@ -158,24 +163,17 @@ public class MainActivity extends AppCompatActivity {
                     String city = c.getString("name");
                     String time = c.getString("dt");
                     String id = c.getString("id");
-
-                    //JSONObject sys = c.getJSONObject("sys");
-                    //String sunset = sys.getString("sunset");
-                    //String sunrise = sys.getString("sunrise");
-
                     JSONArray weather1 = c.getJSONArray("weather");
                     JSONObject weather2 = weather1.getJSONObject(0);
                     String description = weather2.getString("description");
 
                     JSONObject wind = c.getJSONObject("wind");
                     String ws = wind.getString("speed");
-                    String windSpeed = ws.concat(" m/s");
-                    //if (sharedPref.getInt("Speed Unit",0) == 1)
-                    //    windSpeed = Double.toString(Double.parseDouble(ws)*3.6).concat(" km/h");
+                    //ws = df.format(Double.parseDouble(ws)).toString();
+                    String windDir = wind.getString("deg");
+
                     JSONObject clouds = c.getJSONObject("clouds");
                     String cloudiness = clouds.getString("all");
-
-                    String windDir = wind.getString("deg");
 
                     JSONObject main = c.getJSONObject("main");
                     String temp = main.getString("temp");
@@ -184,10 +182,33 @@ public class MainActivity extends AppCompatActivity {
                     String pressure = main.getString("pressure");
                     String humidity = main.getString("humidity");
 
-                    DecimalFormat df = new DecimalFormat("#.#");
-                    temp = df.format(Double.parseDouble(temp)).toString().concat("°C");
-                    tempMin = df.format(Double.parseDouble(tempMin)).toString().concat("°C");
-                    tempMax = df.format(Double.parseDouble(tempMax)).toString().concat("°C");
+                    String windSpeed;
+                    if (sharedPref.getInt("Wind Speed Unit",0) == 1) {
+                        ws = Double.toString(Double.parseDouble(ws) * 3.6);
+                        ws = speedFormat.format(Double.parseDouble(ws));
+                        windSpeed = ws.concat(" km/h");
+                    }
+                    else {
+                        speedFormat.format(Double.parseDouble(ws));
+                        windSpeed = ws.concat(" m/s");
+                    }
+
+                    Log.d("D",Integer.toString(sharedPref.getInt("Temperature Unit",0)));
+                    if(sharedPref.getInt("Temperature Unit",0) == 2){
+                        temp = convertKelvin(temp);
+                        tempMin = convertKelvin(tempMin);
+                        tempMax = convertKelvin(tempMax);
+                    }
+                    else if(sharedPref.getInt("Temperature Unit",0) == 1){
+                        temp = convertFahrenheit(temp);
+                        tempMin = convertFahrenheit(tempMin);
+                        tempMax = convertFahrenheit(tempMax);
+                    }
+                    else {
+                        temp = temp.concat(" °C");
+                        tempMin = tempMin.concat(" °C");
+                        tempMax = tempMax.concat(" °C");
+                    }
 
                     HashMap<String, String> weather = new HashMap<>();
 
@@ -199,8 +220,6 @@ public class MainActivity extends AppCompatActivity {
                     weather.put("Temp Max", tempMax);
                     weather.put("Wind Speed", windSpeed);
                     weather.put("Wind Dir", windDir);
-                    //weather.put("Sunrise", sunrise);
-                    //weather.put("Sunset", sunset);
                     weather.put("Cloudiness", cloudiness);
                     weather.put("Description", description);
                     weather.put("Pressure", pressure);
@@ -235,6 +254,20 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+    }
+
+    public String convertKelvin(String temperature){
+        Double t = Double.parseDouble(temperature) + 273.15;
+        temperature = tempFormat.format(t);
+        temperature = temperature.concat(" K");
+        return temperature;
+    }
+
+    public String convertFahrenheit(String temperature){
+        Double t = (Double.parseDouble(temperature) * 1.8 + 32);
+        temperature = tempFormat.format(t);
+        temperature = temperature.concat(" °F");
+        return temperature;
     }
 
     public void startSpecifiedActivity(int i){

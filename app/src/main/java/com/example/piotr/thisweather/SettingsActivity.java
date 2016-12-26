@@ -20,9 +20,11 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,18 +40,13 @@ import java.util.List;
  */
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
-
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
     Context context;
 
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener
+            = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
-
 
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
@@ -78,8 +75,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         // Clear the summary if there was a lookup error.
                         preference.setSummary(null);
                     } else {
-                        // Set the summary to reflect the new ringtone display
-                        // name.
+                        // Set the summary to reflect the new ringtone display name.
                         String name = ringtone.getTitle(preference.getContext());
                         preference.setSummary(name);
                     }
@@ -94,25 +90,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     };
 
-
-    /**
-     * Helper method to determine if the device has an extra-large screen. For
-     * example, 10" tablets are extra-large.
-     */
-    private static boolean isXLargeTablet(Context context) {
-        return (context.getResources().getConfiguration().screenLayout
-                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
-    }
-
-    /**
-     * Binds a preference's summary to its value. More specifically, when the
-     * preference's value is changed, its summary (line of text below the
-     * preference title) is updated to reflect the value. The summary is also
-     * immediately updated upon calling this method. The exact display format is
-     * dependent on the type of preference.
-     *
-     * @see #sBindPreferenceSummaryToValueListener
-     */
     private static void bindPreferenceSummaryToValue(Preference preference) {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
@@ -131,32 +108,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         context = SettingsActivity.this;
     }
 
-    /**
-     * Set up the {@link android.app.ActionBar}, if the API is available.
-     */
-
-
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            // Show the Up button in the action bar.
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean onIsMultiPane() {
-        return isXLargeTablet(this);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
@@ -180,36 +131,44 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class GeneralPreferenceFragment extends PreferenceFragment {
+        Context context;
+        SharedPreferences sharedPref;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            context = getContext();
+            sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
             ListPreference speed_unit_pref = (ListPreference) findPreference("speed_unit");
-            String[] speed_unit_titles = getResources().getStringArray(R.array.speed_unit_titles);
-            String[] speed_unit_values = getResources().getStringArray(R.array.speed_unit_values);
-            speed_unit_pref.setEntries(speed_unit_titles);
-            speed_unit_pref.setEntryValues(speed_unit_values);
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("temp_unit"));
-            bindPreferenceSummaryToValue(findPreference("speed_unit"));
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            ListPreference temp_unit = (ListPreference) findPreference("temp_unit");
+            ListPreference sync_frequency = (ListPreference) findPreference("sync_freq");
+            //String[] speed_unit_titles = getResources().getStringArray(R.array.speed_unit_titles);
+            //String[] speed_unit_values = getResources().getStringArray(R.array.speed_unit_values);
+            //speed_unit_pref.setEntries(speed_unit_titles);
+            //speed_unit_pref.setEntryValues(speed_unit_values);
+            //bindPreferenceSummaryToValue(findPreference("speed_unit"));
+            //bindPreferenceSummaryToValue(findPreference("temp_unit"));
+            //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
             speed_unit_pref.setOnPreferenceChangeListener(pref_listener);
+            temp_unit.setOnPreferenceChangeListener(pref_listener);
+            sync_frequency.setOnPreferenceChangeListener(pref_listener);
         }
 
-        private Preference.OnPreferenceChangeListener pref_listener = new Preference.OnPreferenceChangeListener() {
+        private Preference.OnPreferenceChangeListener pref_listener  = new Preference.OnPreferenceChangeListener() {
             @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
-                String stringValue = o.toString();
-                if (preference.getKey().equals("speed_unit")){
-                    String wind_speed = preference.getContext().getResources().getString(R.string.speed_unit);
-
-                }
+                int stringValue = Integer.parseInt(o.toString());
+                //preference.setSummary(stringValue);
+                //bindPreferenceSummaryToValue(preference);
+                SharedPreferences.Editor edit = sharedPref.edit();
+                edit.remove(preference.toString());
+                edit.putInt(preference.toString(),stringValue);
+                edit.commit();
+                //Toast.makeText(context, "Preference: " + preference.toString(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Restart app to apply changes", Toast.LENGTH_SHORT).show();
                 return true;
             }
         };
@@ -220,9 +179,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 case android.R.id.home: {
                     startActivity(new Intent(getActivity(), SettingsActivity.class));
                     return true;
-                }
-                case R.id.temp_unit: {
-
                 }
             }
             return super.onOptionsItemSelected(item);

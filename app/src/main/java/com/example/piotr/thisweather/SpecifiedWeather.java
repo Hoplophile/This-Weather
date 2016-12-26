@@ -7,6 +7,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,7 +42,7 @@ public class SpecifiedWeather extends AppCompatActivity {
         final TextView min_temp_view = (TextView)findViewById(R.id.min_temp_view);
         final TextView max_temp_view = (TextView)findViewById(R.id.max_temp_view);
         final TextView description_view = (TextView)findViewById(R.id.description_view);
-        final TextView wind_dir_view = (TextView)findViewById(R.id.wind_dir_view);
+        final ImageView wind_dir_ic = (ImageView)findViewById(R.id.wind_dir_ic);
         final TextView wind_speed_view = (TextView)findViewById(R.id.wind_speed_view);
         final TextView humidity_view = (TextView)findViewById(R.id.humidity_view);
         final TextView pressure_view = (TextView)findViewById(R.id.pressure_view);
@@ -54,14 +55,14 @@ public class SpecifiedWeather extends AppCompatActivity {
         //sunrise = getDateCurrentTimeZone(sunrise2);
         //sunset = getDateCurrentTimeZone(sunset2);
 
-        String directionSymbol = chooseWindDirectionIcon(windDir);
+        chooseWindDirectionIcon(windDir, wind_dir_ic);
 
         city_name_view.setText(cityName);
         temp_view.setText(temp);
         description_view.setText(description);
         min_temp_view.setText("Min temp: "+ tempMin);
         max_temp_view.setText("Max temp: "+ tempMax);
-        wind_dir_view.setText(directionSymbol);
+        //wind_dir_view.setText(directionSymbol);
         wind_speed_view.setText(windSpeed);
         humidity_view.setText(humidity + "%");
         pressure_view.setText(pressure + " HPa");
@@ -70,17 +71,16 @@ public class SpecifiedWeather extends AppCompatActivity {
         //sunset_view.setText(sunset);
     }
 
-    public String chooseWindDirectionIcon(String direction){
+    public void chooseWindDirectionIcon(String direction, ImageView ic){
         Double angle = Double.parseDouble(direction);
-        if(angle>335 || angle<25) return "N";
-        else if(angle>=25 && angle<=65) return "NE";
-        else if(angle>65 && angle<115) return "E";
-        else if(angle>=115 && angle<=155) return "SE";
-        else if(angle>155 && angle<=205) return "S";
-        else if(angle>=205 && angle<=245) return "SW";
-        else if(angle>245 && angle<=295) return "W";
-        else if(angle>=295 && angle<=335) return "NW";
-        else return "";
+        if(angle>335 || angle<25) ic.setBackgroundResource(R.drawable.ic_n);
+        else if(angle>=25 && angle<=65) ic.setBackgroundResource(R.drawable.ic_ne);
+        else if(angle>65 && angle<115) ic.setBackgroundResource(R.drawable.ic_e);
+        else if(angle>=115 && angle<=155) ic.setBackgroundResource(R.drawable.ic_se);
+        else if(angle>155 && angle<=205) ic.setBackgroundResource(R.drawable.ic_s);
+        else if(angle>=205 && angle<=245) ic.setBackgroundResource(R.drawable.ic_sw);
+        else if(angle>245 && angle<=295) ic.setBackgroundResource(R.drawable.ic_w);
+        else if(angle>=295 && angle<=335) ic.setBackgroundResource(R.drawable.ic_nw);
     }
 
     public String getDateCurrentTimeZone(long timestamp) {
