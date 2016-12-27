@@ -123,10 +123,10 @@
 
     <RelativeLayout
         android:layout_width="260dp"
-        android:layout_height="135dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="60dp"
         android:background="@drawable/others_field" >
 
         <ImageView
