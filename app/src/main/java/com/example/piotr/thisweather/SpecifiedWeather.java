@@ -1,12 +1,12 @@
 package com.example.piotr.thisweather;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,13 +17,29 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class SpecifiedWeather extends AppCompatActivity {
+    SharedPreferences sharedPref;
+    Intent in;
+    TextView city_name_view;
+    TextView temp_view;
+    TextView min_temp_view;
+    TextView max_temp_view;
+    TextView description_view;
+    ImageView wind_dir_ic;
+    TextView wind_speed_view;
+    TextView humidity_view;
+    TextView pressure_view;
+    TextView cloudiness_view;
+    ImageButton homeSetter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_specified_weather);
 
-        Intent in = getIntent();
+        in = getIntent();
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
         String cityName = in.getStringExtra("cityName");
         String temp = in.getStringExtra("temp");
         String description = in.getStringExtra("description");
@@ -31,29 +47,24 @@ public class SpecifiedWeather extends AppCompatActivity {
         String tempMax = in.getStringExtra("tempMax");
         String windSpeed = in.getStringExtra("windSpeed");
         String windDir = in.getStringExtra("windDir");
-        String sunrise = in.getStringExtra("sunrise");
-        String sunset = in.getStringExtra("sunset");
         String pressure = in.getStringExtra("pressure");
         String humidity = in.getStringExtra("humidity");
         String cloudiness = in.getStringExtra("cloudiness");
 
-        final TextView city_name_view = (TextView)findViewById(R.id.city_name_view);
-        final TextView temp_view = (TextView)findViewById(R.id.temp_view);
-        final TextView min_temp_view = (TextView)findViewById(R.id.min_temp_view);
-        final TextView max_temp_view = (TextView)findViewById(R.id.max_temp_view);
-        final TextView description_view = (TextView)findViewById(R.id.description_view);
-        final ImageView wind_dir_ic = (ImageView)findViewById(R.id.wind_dir_ic);
-        final TextView wind_speed_view = (TextView)findViewById(R.id.wind_speed_view);
-        final TextView humidity_view = (TextView)findViewById(R.id.humidity_view);
-        final TextView pressure_view = (TextView)findViewById(R.id.pressure_view);
-        final TextView cloudiness_view = (TextView)findViewById(R.id.cloudiness_view);
-        //final TextView sunrise_view = (TextView)findViewById(R.id.sunrise_view);
-        //final TextView sunset_view = (TextView)findViewById(R.id.sunset_view);
-        //long sunrise2 = Long.parseLong(sunrise);
-        //long sunset2 = Long.parseLong(sunset);
+        city_name_view = (TextView)findViewById(R.id.city_name_view);
+        temp_view = (TextView)findViewById(R.id.temp_view);
+        min_temp_view = (TextView)findViewById(R.id.min_temp_view);
+        max_temp_view = (TextView)findViewById(R.id.max_temp_view);
+        description_view = (TextView)findViewById(R.id.description_view);
+        wind_dir_ic = (ImageView)findViewById(R.id.wind_dir_ic);
+        wind_speed_view = (TextView)findViewById(R.id.wind_speed_view);
+        humidity_view = (TextView)findViewById(R.id.humidity_view);
+        pressure_view = (TextView)findViewById(R.id.pressure_view);
+        cloudiness_view = (TextView)findViewById(R.id.cloudiness_view);
+        homeSetter = (ImageButton) findViewById(R.id.home_weather);
 
-        //sunrise = getDateCurrentTimeZone(sunrise2);
-        //sunset = getDateCurrentTimeZone(sunset2);
+        if(sharedPref.getString("ID", "0").equals(in.getStringExtra("id")))
+            homeSetter.setBackgroundResource(R.drawable.rounded_if_home);
 
         chooseWindDirectionIcon(windDir, wind_dir_ic);
 
@@ -62,13 +73,10 @@ public class SpecifiedWeather extends AppCompatActivity {
         description_view.setText(description);
         min_temp_view.setText("Min temp: "+ tempMin);
         max_temp_view.setText("Max temp: "+ tempMax);
-        //wind_dir_view.setText(directionSymbol);
         wind_speed_view.setText(windSpeed);
         humidity_view.setText(humidity + "%");
         pressure_view.setText(pressure + " HPa");
         cloudiness_view.setText(cloudiness + "%");
-        //sunrise_view.setText(sunrise);
-        //sunset_view.setText(sunset);
     }
 
     public void chooseWindDirectionIcon(String direction, ImageView ic){
@@ -100,12 +108,13 @@ public class SpecifiedWeather extends AppCompatActivity {
     public void setHome(View view){
         Intent in = getIntent();
         String id = in.getStringExtra("id");
-     //   Toast.makeText(SpecifiedWeather.this, id, Toast.LENGTH_SHORT).show();
-        final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor edit = sharedPref.edit();
         edit.remove("ID");
         edit.putString("ID",id);
         edit.apply();
-        Toast.makeText(SpecifiedWeather.this, "Home weather set to " + in.getStringExtra("cityName"),Toast.LENGTH_LONG).show();
+        Toast.makeText(SpecifiedWeather.this,
+                "Home weather set to " + in.getStringExtra("cityName"),
+                Toast.LENGTH_LONG).show();
+        homeSetter.setBackgroundResource(R.drawable.rounded_if_home);
     }
 }

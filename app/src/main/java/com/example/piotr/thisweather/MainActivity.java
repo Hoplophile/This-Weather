@@ -1,18 +1,14 @@
 package com.example.piotr.thisweather;
 
-import android.app.LoaderManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,18 +23,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.support.v7.widget.SearchView;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    SharedPreferences sharedPref;
+    SharedPreferences.Editor editor;
     ListView lv;
+    private ArrayList<HashMap<String, String>> filteredList;
     private ArrayList<HashMap<String, String>> citiesList;
     DecimalFormat speedFormat = new DecimalFormat("#.##");
     DecimalFormat tempFormat = new DecimalFormat("#.#");
@@ -50,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
         final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
+        filteredList = new ArrayList<>();
         citiesList = new ArrayList<>();
         new GetCities().execute();
 
@@ -101,7 +100,35 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchView.clearFocus();
+                filter(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filter(newText);
+                return false;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public void filter(String word){
+        citiesList.clear();
+        filteredList.clear();
+        Toast.makeText(MainActivity.this, "entered filter", Toast.LENGTH_SHORT).show();
+        for(int i=0;i<citiesList.size();i++){
+            if(citiesList.get(i).get("Name").contains(word)) {
+                filteredList.add(citiesList.get(i));
+            }
+        }
+        listAdapter(filteredList);
     }
 
     @Override
@@ -134,18 +161,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            listAdapter();
+            listAdapter(citiesList);
         }
     }
 
-    public final void listAdapter(){
-        ListAdapter adapter = new SimpleAdapter(MainActivity.this, citiesList,
+    public final void listAdapter(ArrayList list){
+        ListAdapter adapter = new SimpleAdapter(MainActivity.this, list,
                 R.layout.list_item, new String[]{"Name", "Temp", "Description"},
                 new int[]{R.id.city, R.id.temp, R.id.description});
         lv.setAdapter(adapter);
     }
 
     public final void refresh(){
+        //editor = sharedPref.edit();
         HttpHandler sh = new HttpHandler();
         citiesList.clear();
         String url = "http://api.openweathermap.org/data/2.5/box/city?bbox=13.9,48.8,24.5,54.9,80&cluster=yes&appid=59a58c36edc289243e879bcd9da785e4";
@@ -154,14 +182,11 @@ public class MainActivity extends AppCompatActivity {
         if (jsonStr != null) {
             try {
                 JSONObject jsonObj = new JSONObject(jsonStr);
-
-                // Getting JSON Array node
                 JSONArray cities = jsonObj.getJSONArray("list");
-
                 for (int i = 0; i < cities.length(); i++) {
                     JSONObject c = cities.getJSONObject(i);
                     String city = c.getString("name");
-                    String time = c.getString("dt");
+                    //String time = c.getString("dt");
                     String id = c.getString("id");
                     JSONArray weather1 = c.getJSONArray("weather");
                     JSONObject weather2 = weather1.getJSONObject(0);
@@ -173,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                     String windDir = wind.getString("deg");
 
                     JSONObject clouds = c.getJSONObject("clouds");
-                    String cloudiness = clouds.getString("all");
+                    String cloudiness = clouds.getString("today");
 
                     JSONObject main = c.getJSONObject("main");
                     String temp = main.getString("temp");
@@ -182,8 +207,11 @@ public class MainActivity extends AppCompatActivity {
                     String pressure = main.getString("pressure");
                     String humidity = main.getString("humidity");
 
-                    String windSpeed;
-                    if (sharedPref.getInt("Wind Speed Unit",0) == 1) {
+                    ws = Double.toString(Double.parseDouble(ws)*3.6);                               //conv. to km/h
+                    ws = speedFormat.format(Double.parseDouble(ws));
+                    String windSpeed = ws.concat(" km/h");
+
+                    /*if (sharedPref.getInt("Wind Speed Unit",0) == 1) {
                         ws = Double.toString(Double.parseDouble(ws) * 3.6);
                         ws = speedFormat.format(Double.parseDouble(ws));
                         windSpeed = ws.concat(" km/h");
@@ -194,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     Log.d("D",Integer.toString(sharedPref.getInt("Temperature Unit",0)));
-                    if(sharedPref.getInt("Temperature Unit",0) == 2){
+                    /*if(sharedPref.getInt("Temperature Unit",0) == 2){
                         temp = convertKelvin(temp);
                         tempMin = convertKelvin(tempMin);
                         tempMax = convertKelvin(tempMax);
@@ -203,18 +231,17 @@ public class MainActivity extends AppCompatActivity {
                         temp = convertFahrenheit(temp);
                         tempMin = convertFahrenheit(tempMin);
                         tempMax = convertFahrenheit(tempMax);
-                    }
-                    else {
-                        temp = temp.concat(" °C");
-                        tempMin = tempMin.concat(" °C");
-                        tempMax = tempMax.concat(" °C");
-                    }
+                    }*/
+                    //else {
+                        temp = convertCelcius(temp);
+                        tempMin = convertCelcius(tempMin);
+                        tempMax = convertCelcius(tempMax);
+                    //}
 
                     HashMap<String, String> weather = new HashMap<>();
-
                     weather.put("ID", id);
+                   // editor.putString("ID".concat("i"), id);
                     weather.put("Name", city);
-                    weather.put("Time", time);
                     weather.put("Temp", temp);
                     weather.put("Temp Min", tempMin);
                     weather.put("Temp Max", tempMax);
@@ -225,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
                     weather.put("Pressure", pressure);
                     weather.put("Humidity", humidity);
                     citiesList.add(weather);
+                    //editor.apply();
                 }
 
             } catch (final JSONException e) {
@@ -232,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(),
-                                "Json parsing error: " + e.getMessage(),
+                                "JSON parsing error: " + e.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -248,12 +276,19 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Toast.makeText(getApplicationContext(),
-                            "Couldn't get json from server. Check LogCat for possible errors!",
+                            "Couldn't get data from server",
                             Toast.LENGTH_LONG).show();
                 }
             });
         }
 
+    }
+
+    public String convertCelcius(String temperature){
+        Double t = Double.parseDouble(temperature);
+        temperature = tempFormat.format(t);
+        temperature = temperature.concat(" °C");
+        return temperature;
     }
 
     public String convertKelvin(String temperature){
@@ -275,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, SpecifiedWeather.class);
         intent.putExtra("cityName", citiesList.get(i).get("Name"));
         intent.putExtra("id", citiesList.get(i).get("ID"));
-        //  intent.putExtra("time", citiesList.get(i).get("Time"));
         intent.putExtra("temp", citiesList.get(i).get("Temp"));
         intent.putExtra("description", citiesList.get(i).get("Description"));
         intent.putExtra("tempMin", citiesList.get(i).get("Temp Min"));
@@ -289,6 +323,4 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("cloudiness", citiesList.get(i).get("Cloudiness"));
         startActivity(intent);
     }
-
 }
-
