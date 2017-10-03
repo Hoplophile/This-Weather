@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
                 if(!id.equals("none")) {
                     for (int i = 0; i<citiesList.size(); i++){
                         if(citiesList.get(i).get("ID").equals(id)){
-                            startSpecifiedActivity(i);
+                            startSpecifiedActivity(i, citiesList);
                         }
                     }
                 }
@@ -85,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                startSpecifiedActivity(i);
+                if(filteredList.size()!=0) startSpecifiedActivity(i, filteredList);
+                    else startSpecifiedActivity(i, citiesList);
             }
         });
     }
@@ -116,14 +117,15 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+        filteredList.clear();
         return super.onCreateOptionsMenu(menu);
     }
 
     public void filter(String word){
-        citiesList.clear();
+        int size = citiesList.size();
         filteredList.clear();
-        Toast.makeText(MainActivity.this, "entered filter", Toast.LENGTH_SHORT).show();
-        for(int i=0;i<citiesList.size();i++){
+        lv.setAdapter(null);
+        for(int i=0;i<size;i++){
             if(citiesList.get(i).get("Name").contains(word)) {
                 filteredList.add(citiesList.get(i));
             }
@@ -305,22 +307,38 @@ public class MainActivity extends AppCompatActivity {
         return temperature;
     }
 
-    public void startSpecifiedActivity(int i){
+    public void startSpecifiedActivity(int i, ArrayList list){
         findViewById(R.id.loading).setVisibility(View.VISIBLE);
         Intent intent = new Intent(MainActivity.this, SpecifiedWeather.class);
-        intent.putExtra("cityName", citiesList.get(i).get("Name"));
-        intent.putExtra("id", citiesList.get(i).get("ID"));
-        intent.putExtra("temp", citiesList.get(i).get("Temp"));
-        intent.putExtra("description", citiesList.get(i).get("Description"));
-        intent.putExtra("tempMin", citiesList.get(i).get("Temp Min"));
-        intent.putExtra("tempMax", citiesList.get(i).get("Temp Max"));
-        intent.putExtra("windSpeed", citiesList.get(i).get("Wind Speed"));
-        intent.putExtra("windDir", citiesList.get(i).get("Wind Dir"));
-        intent.putExtra("sunrise", citiesList.get(i).get("Sunrise"));
-        intent.putExtra("sunset", citiesList.get(i).get("Sunset"));
-        intent.putExtra("pressure", citiesList.get(i).get("Pressure"));
-        intent.putExtra("humidity", citiesList.get(i).get("Humidity"));
-        intent.putExtra("cloudiness", citiesList.get(i).get("Cloudiness"));
+        if (list==citiesList) {
+            intent.putExtra("cityName", citiesList.get(i).get("Name"));
+            intent.putExtra("id", citiesList.get(i).get("ID"));
+            intent.putExtra("temp", citiesList.get(i).get("Temp"));
+            intent.putExtra("description", citiesList.get(i).get("Description"));
+            intent.putExtra("tempMin", citiesList.get(i).get("Temp Min"));
+            intent.putExtra("tempMax", citiesList.get(i).get("Temp Max"));
+            intent.putExtra("windSpeed", citiesList.get(i).get("Wind Speed"));
+            intent.putExtra("windDir", citiesList.get(i).get("Wind Dir"));
+            intent.putExtra("sunrise", citiesList.get(i).get("Sunrise"));
+            intent.putExtra("sunset", citiesList.get(i).get("Sunset"));
+            intent.putExtra("pressure", citiesList.get(i).get("Pressure"));
+            intent.putExtra("humidity", citiesList.get(i).get("Humidity"));
+            intent.putExtra("cloudiness", citiesList.get(i).get("Cloudiness"));
+        } else{
+            intent.putExtra("cityName", filteredList.get(i).get("Name"));
+            intent.putExtra("id", filteredList.get(i).get("ID"));
+            intent.putExtra("temp", filteredList.get(i).get("Temp"));
+            intent.putExtra("description", filteredList.get(i).get("Description"));
+            intent.putExtra("tempMin", filteredList.get(i).get("Temp Min"));
+            intent.putExtra("tempMax", filteredList.get(i).get("Temp Max"));
+            intent.putExtra("windSpeed", filteredList.get(i).get("Wind Speed"));
+            intent.putExtra("windDir", filteredList.get(i).get("Wind Dir"));
+            intent.putExtra("sunrise", filteredList.get(i).get("Sunrise"));
+            intent.putExtra("sunset", filteredList.get(i).get("Sunset"));
+            intent.putExtra("pressure", filteredList.get(i).get("Pressure"));
+            intent.putExtra("humidity", filteredList.get(i).get("Humidity"));
+            intent.putExtra("cloudiness", filteredList.get(i).get("Cloudiness"));
+        }
         startActivity(intent);
     }
 }
