@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -14,8 +13,6 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
@@ -152,10 +149,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
+
             ListPreference speed_unit_pref = (ListPreference) findPreference("speed_unit");
             ListPreference temp_unit_pref = (ListPreference) findPreference("temp_unit");
-            bindPreferenceSummaryToValue(findPreference("speed_unit"));
-            bindPreferenceSummaryToValue(findPreference("temp_unit"));
+            bindPreferenceSummaryToValue(speed_unit_pref);
+            bindPreferenceSummaryToValue(temp_unit_pref);
             speed_unit_pref.setOnPreferenceChangeListener(pref_listener);
             temp_unit_pref.setOnPreferenceChangeListener(pref_listener);
         }
@@ -171,7 +169,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 editor.putInt(preference.toString(), newValue);
                 editor.apply();
                 bindPreferenceSummaryToValue(preference);
-                preference.setSummary(newValue);
+                //preference.setSummary(newValue);
                 Toast.makeText(context, "Refresh to apply changes", Toast.LENGTH_SHORT).show();
                 return true;
             }

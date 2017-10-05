@@ -203,21 +203,25 @@ public class MainActivity extends AppCompatActivity {
                     String pressure = main.getString("pressure");
                     String humidity = main.getString("humidity");
 
-                    ws = Double.toString(Double.parseDouble(ws)*3.6);                               //conv. to km/h
+                    ws = Double.toString(Double.parseDouble(ws));
                     ws = speedFormat.format(Double.parseDouble(ws));
                     String windSpeed;
 
                     if (sharedPref.getInt("Wind Speed Unit",0) == 1) {
                         ws = Double.toString(Double.parseDouble(ws) * 3.6);
-                        ws = speedFormat.format(Double.parseDouble(ws));
+                        try {
+                            ws = speedFormat.format(Double.parseDouble(ws));
+                        } catch (NumberFormatException e) {}
                         windSpeed = ws.concat(" km/h");
                     }
                     else {
-//                        speedFormat.format(Double.parseDouble(ws));
+                        try {
+                            speedFormat.format(Double.parseDouble(ws));
+                        } catch (NumberFormatException e) {}
                         windSpeed = ws.concat(" m/s");
                     }
 
-                    if(sharedPref.getInt("Temperature Unit",0) == 2){
+                    /*if(sharedPref.getInt("Temperature Unit",0) == 2){
                         temp = convertKelvin(temp);
                         tempMin = convertKelvin(tempMin);
                         tempMax = convertKelvin(tempMax);
@@ -227,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
                         tempMin = convertFahrenheit(tempMin);
                         tempMax = convertFahrenheit(tempMax);
                     }
-                    else {
+                    else*/ {
                         temp = convertCelsius(temp);
                         tempMin = convertCelsius(tempMin);
                         tempMax = convertCelsius(tempMax);
