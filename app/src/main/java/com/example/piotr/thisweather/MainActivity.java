@@ -33,13 +33,11 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
-    SharedPreferences sharedPref;
-    SharedPreferences.Editor editor;
     ListView lv;
     private ArrayList<HashMap<String, String>> filteredList;
     private ArrayList<HashMap<String, String>> citiesList;
-    DecimalFormat speedFormat = new DecimalFormat("#.##");
-    DecimalFormat tempFormat = new DecimalFormat("#.#");
+    DecimalFormat speedFormat = new DecimalFormat("##.##");
+    DecimalFormat tempFormat = new DecimalFormat("##.#");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,11 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent settings = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(settings);
@@ -148,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class GetCities extends AsyncTask<Void, Void, Void> {
+    private class GetCities extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -187,8 +181,8 @@ public class MainActivity extends AppCompatActivity {
                 JSONArray cities = jsonObj.getJSONArray("list");
                 for (int i = 0; i < cities.length(); i++) {
                     JSONObject c = cities.getJSONObject(i);
+
                     String city = c.getString("name");
-                    //String time = c.getString("dt");
                     String id = c.getString("id");
                     JSONArray weather1 = c.getJSONArray("weather");
                     JSONObject weather2 = weather1.getJSONObject(0);
@@ -211,20 +205,19 @@ public class MainActivity extends AppCompatActivity {
 
                     ws = Double.toString(Double.parseDouble(ws)*3.6);                               //conv. to km/h
                     ws = speedFormat.format(Double.parseDouble(ws));
-                    String windSpeed = ws.concat(" km/h");
+                    String windSpeed;
 
-                    /*if (sharedPref.getInt("Wind Speed Unit",0) == 1) {
+                    if (sharedPref.getInt("Wind Speed Unit",0) == 1) {
                         ws = Double.toString(Double.parseDouble(ws) * 3.6);
                         ws = speedFormat.format(Double.parseDouble(ws));
                         windSpeed = ws.concat(" km/h");
                     }
                     else {
-                        speedFormat.format(Double.parseDouble(ws));
+//                        speedFormat.format(Double.parseDouble(ws));
                         windSpeed = ws.concat(" m/s");
                     }
 
-                    Log.d("D",Integer.toString(sharedPref.getInt("Temperature Unit",0)));
-                    /*if(sharedPref.getInt("Temperature Unit",0) == 2){
+                    if(sharedPref.getInt("Temperature Unit",0) == 2){
                         temp = convertKelvin(temp);
                         tempMin = convertKelvin(tempMin);
                         tempMax = convertKelvin(tempMax);
@@ -233,16 +226,16 @@ public class MainActivity extends AppCompatActivity {
                         temp = convertFahrenheit(temp);
                         tempMin = convertFahrenheit(tempMin);
                         tempMax = convertFahrenheit(tempMax);
-                    }*/
-                    //else {
-                        temp = convertCelcius(temp);
-                        tempMin = convertCelcius(tempMin);
-                        tempMax = convertCelcius(tempMax);
-                    //}
+                    }
+                    else {
+                        temp = convertCelsius(temp);
+                        tempMin = convertCelsius(tempMin);
+                        tempMax = convertCelsius(tempMax);
+                    }
 
                     HashMap<String, String> weather = new HashMap<>();
                     weather.put("ID", id);
-                   // editor.putString("ID".concat("i"), id);
+                    //editor.putString("ID".concat("i"), id);
                     weather.put("Name", city);
                     weather.put("Temp", temp);
                     weather.put("Temp Min", tempMin);
@@ -286,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public String convertCelcius(String temperature){
+    public String convertCelsius(String temperature){
         Double t = Double.parseDouble(temperature);
         temperature = tempFormat.format(t);
         temperature = temperature.concat(" °C");

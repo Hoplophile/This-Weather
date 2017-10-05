@@ -40,7 +40,7 @@ import java.util.List;
  */
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
-    Context context;
+    Context context = SettingsActivity.this;
 
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener
             = new Preference.OnPreferenceChangeListener() {
@@ -103,6 +103,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case android.R.id.home: {
+                finish();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = SettingsActivity.this;
@@ -141,34 +152,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-
             ListPreference speed_unit_pref = (ListPreference) findPreference("speed_unit");
-            ListPreference temp_unit = (ListPreference) findPreference("temp_unit");
-            ListPreference sync_frequency = (ListPreference) findPreference("sync_freq");
-            //String[] speed_unit_titles = getResources().getStringArray(R.array.speed_unit_titles);
-            //String[] speed_unit_values = getResources().getStringArray(R.array.speed_unit_values);
-            //speed_unit_pref.setEntries(speed_unit_titles);
-            //speed_unit_pref.setEntryValues(speed_unit_values);
-            //bindPreferenceSummaryToValue(findPreference("speed_unit"));
-            //bindPreferenceSummaryToValue(findPreference("temp_unit"));
-            //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            ListPreference temp_unit_pref = (ListPreference) findPreference("temp_unit");
+            bindPreferenceSummaryToValue(findPreference("speed_unit"));
+            bindPreferenceSummaryToValue(findPreference("temp_unit"));
             speed_unit_pref.setOnPreferenceChangeListener(pref_listener);
-            temp_unit.setOnPreferenceChangeListener(pref_listener);
-            sync_frequency.setOnPreferenceChangeListener(pref_listener);
+            temp_unit_pref.setOnPreferenceChangeListener(pref_listener);
         }
 
         private Preference.OnPreferenceChangeListener pref_listener  = new Preference.OnPreferenceChangeListener() {
             @Override
-                public boolean onPreferenceChange(Preference preference, Object o) {
-                int stringValue = Integer.parseInt(o.toString());
-                //preference.setSummary(stringValue);
-                //bindPreferenceSummaryToValue(preference);
-                SharedPreferences.Editor edit = sharedPref.edit();
-                edit.remove(preference.toString());
-                edit.putInt(preference.toString(),stringValue);
-                edit.commit();
-                //Toast.makeText(context, "Preference: " + preference.toString(), Toast.LENGTH_SHORT).show();
-                Toast.makeText(context, "Restart app to apply changes", Toast.LENGTH_SHORT).show();
+                public boolean onPreferenceChange(Preference preference, Object o) {                //TODO
+                SharedPreferences.Editor editor = sharedPref.edit();
+                int newValue = Integer.parseInt(o.toString());
+                Toast.makeText(context, preference.toString(), Toast.LENGTH_SHORT).show();
+
+                editor.remove(preference.toString());
+                editor.putInt(preference.toString(), newValue);
+                editor.apply();
+                bindPreferenceSummaryToValue(preference);
+                preference.setSummary(newValue);
+                Toast.makeText(context, "Refresh to apply changes", Toast.LENGTH_SHORT).show();
                 return true;
             }
         };
@@ -213,9 +217,4 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-
-    /**
-     * This fragment shows data and sync preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
 }

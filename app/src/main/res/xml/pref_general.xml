@@ -24,14 +24,4 @@
         android:title="Wind Speed Unit"
         android:id="@+id/speed_unit" />
 
-    <ListPreference
-        android:defaultValue="180"
-        android:entries="@array/pref_sync_frequency_titles"
-        android:entryValues="@array/pref_sync_frequency_values"
-        android:key="sync_freq"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/pref_title_sync_frequency"
-        android:id="@+id/sync_freq"/>
-
 </PreferenceScreen>
